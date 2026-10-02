@@ -1,0 +1,6 @@
+{
+  "name": "DreamByte Terminal",
+  "description": "Terminal moderna con identidad visual propia para DreamByte Studios y DreamByte OS M.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
