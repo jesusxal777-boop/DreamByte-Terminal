@@ -8,14 +8,22 @@ import com.example.command.CommandExecutor
 import com.example.command.CommandRegistry
 import com.example.command.impl.AboutCommand
 import com.example.command.impl.AppsCommand
+import com.example.command.impl.CatCommand
+import com.example.command.impl.CdCommand
 import com.example.command.impl.ClearCommand
 import com.example.command.impl.DateCommand
 import com.example.command.impl.DpmCommand
 import com.example.command.impl.DreamCommand
 import com.example.command.impl.EchoCommand
+import com.example.command.impl.ExportCommand
 import com.example.command.impl.FilesCommand
+import com.example.command.impl.GrepCommand
 import com.example.command.impl.HelpCommand
 import com.example.command.impl.HistoryCommand
+import com.example.command.impl.JavaCommand
+import com.example.command.impl.PkgCommand
+import com.example.command.impl.PwdCommand
+import com.example.command.impl.PythonCommand
 import com.example.command.impl.ScriptCommand
 import com.example.command.impl.SettingsCommand
 import com.example.command.impl.SudoCommand
@@ -23,6 +31,8 @@ import com.example.command.impl.SysInfoCommand
 import com.example.command.impl.ThemeCommand
 import com.example.command.impl.TimeCommand
 import com.example.command.impl.VersionCommand
+import com.example.command.impl.WcCommand
+import com.example.command.impl.WgetCommand
 import com.example.command.impl.WhoamiCommand
 import com.example.data.SettingsRepository
 import com.example.history.CommandHistoryManager
@@ -31,6 +41,7 @@ import com.example.model.LineType
 import com.example.model.TerminalLine
 import com.example.model.TerminalSettings
 import com.example.model.ThemeMode
+import com.example.shell.DreamShellEnvironment
 import com.example.util.TerminalAudioFeedback
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -56,6 +67,7 @@ class TerminalViewModel(application: Application) : AndroidViewModel(application
 
     private val historyManager = CommandHistoryManager(application)
     private val audioFeedback = TerminalAudioFeedback(application)
+    val shellEnv = DreamShellEnvironment(application)
 
     val registry = CommandRegistry()
     private val executor = CommandExecutor(registry)
@@ -78,7 +90,6 @@ class TerminalViewModel(application: Application) : AndroidViewModel(application
     private val _pendingSystemOp = MutableStateFlow<PendingSystemOp?>(null)
     val pendingSystemOp: StateFlow<PendingSystemOp?> = _pendingSystemOp.asStateFlow()
 
-    // Trigger for file manager intent
     private val _openFilePickerEvent = MutableStateFlow(false)
     val openFilePickerEvent: StateFlow<Boolean> = _openFilePickerEvent.asStateFlow()
 
@@ -87,23 +98,41 @@ class TerminalViewModel(application: Application) : AndroidViewModel(application
     }
 
     private fun registerBuiltInCommands() {
+        // General & Reference
         registry.register(HelpCommand())
         registry.register(ClearCommand())
         registry.register(AboutCommand())
         registry.register(VersionCommand())
+        registry.register(SettingsCommand())
+        registry.register(HistoryCommand(historyManager))
+
+        // DreamShell Language & File utilities
         registry.register(EchoCommand())
+        registry.register(ScriptCommand())
+        registry.register(FilesCommand())
+        registry.register(PwdCommand())
+        registry.register(CdCommand())
+        registry.register(GrepCommand())
+        registry.register(CatCommand())
+        registry.register(WcCommand())
+        registry.register(ExportCommand())
+
+        // Package Management & Tools
+        registry.register(PkgCommand())
+        registry.register(WgetCommand())
+        registry.register(PythonCommand())
+        registry.register(JavaCommand())
+
+        // System & Diagnostics
         registry.register(DateCommand())
         registry.register(TimeCommand())
         registry.register(ThemeCommand())
         registry.register(AppsCommand())
-        registry.register(FilesCommand())
         registry.register(DreamCommand())
-        registry.register(HistoryCommand(historyManager))
         registry.register(WhoamiCommand())
         registry.register(SysInfoCommand())
-        registry.register(ScriptCommand())
-        registry.register(SettingsCommand())
-        // Future OS M commands
+
+        // Future OS M Commands
         registry.register(SudoCommand())
         registry.register(DpmCommand())
     }
@@ -111,19 +140,19 @@ class TerminalViewModel(application: Application) : AndroidViewModel(application
     private fun createInitialLines(): List<TerminalLine> {
         return listOf(
             TerminalLine(
-                text = "DREAMBYTE TERMINAL",
+                text = "DREAMBYTE TERMINAL (DreamShell v1.2)",
                 type = LineType.HEADER_BANNER
             ),
             TerminalLine(
-                text = "─────────────────────────────",
+                text = "───────────────────────────────────────────",
                 type = LineType.SYSTEM_NOTICE
             ),
             TerminalLine(
-                text = "DreamByte OS M Mobile Shell • Prototype Edition",
+                text = "DreamByte OS M Mobile Shell • Official Package Ecosystem",
                 type = LineType.SYSTEM_NOTICE
             ),
             TerminalLine(
-                text = "Type 'help' for available commands or 'dream help'.",
+                text = "Type 'help' for manual or 'pkg update' to sync packages.",
                 type = LineType.SYSTEM_NOTICE
             )
         )
@@ -146,8 +175,10 @@ class TerminalViewModel(application: Application) : AndroidViewModel(application
             audioFeedback.playExecuteClick()
         }
 
-        // Add prompt line
-        val promptPrefix = currentSettings.promptPrefix
+        // Add prompt line with active directory indication
+        val relCwd = if (shellEnv.currentDirectory == shellEnv.homeDir) "~" else shellEnv.currentDirectory.name
+        val promptPrefix = "${currentSettings.username}@${currentSettings.hostname}:$relCwd$ "
+
         val promptLine = TerminalLine(
             text = input,
             type = LineType.PROMPT,
@@ -184,6 +215,7 @@ class TerminalViewModel(application: Application) : AndroidViewModel(application
             androidContext = getApplication(),
             settings = currentSettings,
             registry = registry,
+            shellEnv = shellEnv,
             onClearScreen = { clearScreen() },
             onThemeChange = { mode -> updateTheme(mode) },
             onUserChange = { user -> updateUser(user) },

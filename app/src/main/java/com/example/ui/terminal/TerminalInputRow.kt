@@ -50,6 +50,7 @@ fun TerminalInputRow(
     onSubmit: () -> Unit,
     settings: TerminalSettings,
     isExecuting: Boolean,
+    promptPrefix: String = settings.promptPrefix,
     modifier: Modifier = Modifier
 ) {
     val colors = LocalDreamByteColors.current
@@ -76,7 +77,6 @@ fun TerminalInputRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Prompt
-        val promptPrefix = settings.promptPrefix
         val userPart = promptPrefix.substringBefore("@")
         val restPart = promptPrefix.substringAfter("@")
 

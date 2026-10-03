@@ -4,11 +4,14 @@ import android.content.Context
 import com.example.model.CommandResult
 import com.example.model.TerminalSettings
 import com.example.model.ThemeMode
+import com.example.shell.DreamShellEnvironment
 
 data class CommandContext(
     val androidContext: Context,
     val settings: TerminalSettings,
     val registry: CommandRegistry,
+    val shellEnv: DreamShellEnvironment,
+    val stdin: String = "",
     val onClearScreen: () -> Unit,
     val onThemeChange: (ThemeMode) -> Unit,
     val onUserChange: (String) -> Unit,

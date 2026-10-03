@@ -48,14 +48,16 @@ fun VirtualKeyboardBar(
         AccessoryKey(label = "↓", onClick = onHistoryDown)
         AccessoryKey(label = "CLEAR", onClick = { onKeyPress("CLEAR") })
         AccessoryKey(label = "|", onClick = { onKeyPress(" | ") })
+        AccessoryKey(label = ">", onClick = { onKeyPress(" > ") })
+        AccessoryKey(label = ">>", onClick = { onKeyPress(" >> ") })
         AccessoryKey(label = "&&", onClick = { onKeyPress(" && ") })
-        AccessoryKey(label = "~", onClick = { onKeyPress("~") })
+        AccessoryKey(label = "pkg", onClick = { onKeyPress("pkg ") })
+        AccessoryKey(label = "wget", onClick = { onKeyPress("wget ") })
+        AccessoryKey(label = "python", onClick = { onKeyPress("python ") })
+        AccessoryKey(label = "files", onClick = { onKeyPress("files ") })
+        AccessoryKey(label = "help", onClick = { onKeyPress("help ") })
         AccessoryKey(label = "/", onClick = { onKeyPress("/") })
         AccessoryKey(label = "-", onClick = { onKeyPress("-") })
-        AccessoryKey(label = "help", onClick = { onKeyPress("help") })
-        AccessoryKey(label = "dream", onClick = { onKeyPress("dream ") })
-        AccessoryKey(label = "apps", onClick = { onKeyPress("apps") })
-        AccessoryKey(label = "files", onClick = { onKeyPress("files") })
     }
 }
 

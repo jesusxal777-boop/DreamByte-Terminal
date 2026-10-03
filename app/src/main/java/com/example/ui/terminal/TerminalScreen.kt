@@ -163,13 +163,17 @@ fun TerminalScreen(
 
                     Spacer(modifier = Modifier.height(4.dp))
 
+                    val relCwd = if (viewModel.shellEnv.currentDirectory == viewModel.shellEnv.homeDir) "~" else viewModel.shellEnv.currentDirectory.name
+                    val activePrompt = "${settings.username}@${settings.hostname}:$relCwd$ "
+
                     // Terminal Input Row
                     TerminalInputRow(
                         input = currentInput,
                         onInputChange = { viewModel.onInputChange(it) },
                         onSubmit = { viewModel.submitCommand() },
                         settings = settings,
-                        isExecuting = isExecuting
+                        isExecuting = isExecuting,
+                        promptPrefix = activePrompt
                     )
                 }
             }

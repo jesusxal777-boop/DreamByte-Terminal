@@ -5,6 +5,7 @@ import android.os.Build
 import com.example.command.Command
 import com.example.command.CommandCategory
 import com.example.command.CommandContext
+import com.example.command.CommandHelp
 import com.example.model.CommandAction
 import com.example.model.CommandResult
 
@@ -14,6 +15,24 @@ class DreamCommand : Command {
     override val aliases: List<String> = listOf("dreambyte", "db")
     override val usage: String = "dream [help | about | info | version | mascot]"
     override val category: CommandCategory = CommandCategory.DREAMBYTE
+
+    override val detailedHelp: CommandHelp = CommandHelp(
+        summary = "DreamByte OS Core Namespace",
+        synopsis = "dream <subcommand>",
+        options = listOf(
+            "help" to "List core DreamByte namespace commands",
+            "about" to "Display DreamByte Studios vision and philosophy",
+            "info" to "Display live device telemetry, memory, battery and status",
+            "version" to "Display DreamByte OS M preview edition specifications",
+            "mascot" to "Showcase the official DreamByte Cloud Robot mascot"
+        ),
+        description = "Provides access to the proprietary subsystem namespace of DreamByte OS M and DreamByte Studios.",
+        examples = listOf(
+            "dream help" to "Show subcommands",
+            "dream info" to "Check system diagnostics",
+            "dream mascot" to "View the official robot mascot card"
+        )
+    )
 
     override suspend fun execute(context: CommandContext, args: List<String>): CommandResult {
         if (args.isEmpty() || args[0].lowercase() == "help") {
