@@ -6,6 +6,9 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -54,8 +57,92 @@ jobs:
       - name: Build Debug APK
         run: ./gradlew assembleDebug --stacktrace
 
-      - name: Upload APK
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: DreamByte-Terminal-debug
           path: app/build/outputs/apk/debug/*.apk
+
+      - name: Determine next release version
+        id: release_version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          releases_json="$(
+            gh api --paginate \
+              "repos/${GITHUB_REPOSITORY}/releases?per_page=100" \
+              --jq '[.[] | {tag_name, name}]' |
+            jq -s 'add'
+          )"
+
+          latest="$(
+            printf '%s' "$releases_json" |
+            jq -r '
+              .[]
+              | [(.tag_name // ""), (.name // "")]
+              | join(" ")
+              | scan("[0-9]+\\.[0-9]+")
+            ' |
+            sort -V |
+            tail -n 1
+          )"
+
+          if [ -z "$latest" ]; then
+            version="0.0"
+          else
+            major="${latest%.*}"
+            minor="${latest#*.}"
+            version="$major.$((10#$minor + 1))"
+          fi
+
+          tag="v$version"
+
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "::error::Release $tag already exists."
+            exit 1
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+          echo "Next release: $tag"
+
+      - name: Prepare APK for Release
+        env:
+          VERSION: ${{ steps.release_version.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          apk="$(
+            find app/build/outputs/apk/debug \
+              -maxdepth 1 \
+              -type f \
+              -name '*.apk' |
+            head -n 1
+          )"
+
+          if [ -z "$apk" ]; then
+            echo "::error::No APK was produced."
+            exit 1
+          fi
+
+          mkdir -p release
+
+          cp "$apk" "release/DreamByte-Terminal-v${VERSION}.apk"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.release_version.outputs.version }}
+          TAG: ${{ steps.release_version.outputs.tag }}
+        run: |
+          set -euo pipefail
+
+          gh release create "$TAG" \
+            "release/DreamByte-Terminal-v${VERSION}.apk#DreamByte-Terminal-v${VERSION}.apk" \
+            --title "DreamByte Terminal $VERSION" \
+            --generate-notes
+
+          echo "Published DreamByte Terminal $VERSION"
